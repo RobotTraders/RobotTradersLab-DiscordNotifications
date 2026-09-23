@@ -1,0 +1,26 @@
+[project]
+name = "robottraderslab-discord-notifications"
+version = "0.1.0"
+description = "Discord integration - logging handler and trading notifications via webhooks"
+readme = "README.md"
+requires-python = ">=3.13,<3.14"
+license = "Apache-2.0"
+dependencies = [
+  "robottraderslab>=0.1.0",
+  "httpx>=0.28.1",
+  "lazy-loader>=0.5",
+]
+
+[project.entry-points."robot_traders_lab.logging_handlers"]
+discord = "robottraderslab_discord_notifications:DiscordHandler"
+
+[project.entry-points."robot_traders_lab.notifiers"]
+discord = "robottraderslab_discord_notifications.notifier:DiscordActionNotifier.from_webhook_url"
+
+[build-system]
+requires = ["uv_build>=0.10.4,<0.11.0"]
+build-backend = "uv_build"
+
+
+[tool.uv.build-backend]
+module-name = "robottraderslab_discord_notifications"
