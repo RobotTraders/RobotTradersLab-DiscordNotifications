@@ -1,7 +1,7 @@
 [project]
 name = "robottraderslab-discord-notifications"
-version = "0.1.0"
-description = "Discord integration - logging handler and trading notifications via webhooks"
+version = "0.1.1"
+description = "Discord notifications plugin for the RobotTradersLab engine"
 readme = "README.md"
 requires-python = ">=3.13,<3.14"
 license = "Apache-2.0"
@@ -10,6 +10,11 @@ dependencies = [
   "httpx>=0.28.1",
   "lazy-loader>=0.5",
 ]
+
+[project.urls]
+Homepage = "https://robottraders.io/lab/discord-notifications"
+Documentation = "https://robottraders.io/lab/docs/discord-notifications.html"
+Repository = "https://github.com/RobotTraders/RobotTradersLab-DiscordNotifications"
 
 [project.entry-points."robot_traders_lab.logging_handlers"]
 discord = "robottraderslab_discord_notifications:DiscordHandler"
@@ -24,3 +29,54 @@ build-backend = "uv_build"
 
 [tool.uv.build-backend]
 module-name = "robottraderslab_discord_notifications"
+
+[dependency-groups]
+dev = [
+  "bandit[toml]==1.9.4",
+  "mypy==1.20.0",
+  "pytest==9.0.3",
+  "pytest-asyncio==1.3.0",
+  "pytest-cov==7.1.0",
+  "ruff==0.15.10",
+]
+
+[tool.coverage.run]
+omit = ["*/tests/*", "*/test_*.py"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+filterwarnings = [
+  "ignore:enable_cleanup_closed ignored because.*:DeprecationWarning:aiohttp.connector",
+]
+
+[tool.mypy]
+packages = ["robottraderslab_discord_notifications"]
+follow_imports = "normal"
+python_version = "3.13"
+color_output = true
+show_error_codes = true
+check_untyped_defs = true
+disallow_untyped_defs = true
+no_implicit_optional = true
+warn_return_any = true
+warn_unreachable = true
+warn_unused_ignores = true
+ignore_missing_imports = true
+namespace_packages = true
+incremental = true
+cache_dir = ".mypy_cache"
+exclude = '^(build/|dist/|\.venv/|.*tests/)'
+
+[tool.bandit]
+skips = ["B101"]
+
+[tool.ruff]
+target-version = "py313"
+
+[tool.ruff.lint]
+extend-select = ["I", "PT"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["robottraderslab"]

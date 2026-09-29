@@ -1,5 +1,6 @@
 import httpx
 import pytest
+
 from robottraderslab_discord_notifications.webhook.rate_limiter import (
     GLOBAL_TIER,
     WEBHOOK_TIER,

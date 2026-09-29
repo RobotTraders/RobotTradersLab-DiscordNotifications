@@ -5,6 +5,7 @@ from http import HTTPStatus
 
 import pytest
 from fake_discord import NO_DELAY, WEBHOOK_ID, FakeDiscord
+
 from robottraderslab_discord_notifications import DiscordHandler
 from robottraderslab_discord_notifications.webhook import DEFAULT_MAX_RETRIES
 from robottraderslab_discord_notifications.webhook.handler import (

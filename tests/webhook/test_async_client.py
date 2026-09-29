@@ -2,6 +2,7 @@ from typing import Any
 
 import httpx
 import pytest
+
 from robottraderslab_discord_notifications.webhook.async_client import (
     AsyncDiscordClient,
 )

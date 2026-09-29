@@ -2,15 +2,15 @@ from datetime import datetime, timezone
 from unittest.mock import AsyncMock, Mock
 
 import pytest
+
+from robottraderslab import Symbol
+from robottraderslab.exchanges import OrderFill, OrderPlacement, OrderSide
 from robottraderslab_discord_notifications.notifier import DiscordActionNotifier
 from robottraderslab_discord_notifications.webhook import (
     DEFAULT_MAX_RETRIES,
     DEFAULT_RETRY_BACKOFF_SECONDS,
     AsyncDiscordClient,
 )
-
-from robottraderslab import Symbol
-from robottraderslab.exchanges import OrderFill, OrderPlacement, OrderSide
 
 
 @pytest.fixture
@@ -34,8 +34,8 @@ def buy_order() -> OrderFill:
         symbol=Symbol.create("BTC/USDT:USDT"),
         side=OrderSide.BUY,
         kind="market",
-        filled_quantity=0.5,
-        execution_time=datetime(2025, 10, 27, 12, 0, 0, tzinfo=timezone.utc),
+        quantity=0.5,
+        timestamp=datetime(2025, 10, 27, 12, 0, 0, tzinfo=timezone.utc),
     )
 
 
@@ -75,8 +75,8 @@ async def test_order_notification(notifier, mock_discord_client, side):
         symbol=Symbol.create("BTC/USDT:USDT"),
         side=side,
         kind="market",
-        filled_quantity=0.5,
-        execution_time=datetime(2025, 10, 27, 12, 0, 0, tzinfo=timezone.utc),
+        quantity=0.5,
+        timestamp=datetime(2025, 10, 27, 12, 0, 0, tzinfo=timezone.utc),
     )
 
     async with notifier:
@@ -123,8 +123,8 @@ async def test_notify_order_embed_content(notifier, mock_discord_client):
         symbol=Symbol.create("BTC/USDT:USDT"),
         side=OrderSide.BUY,
         kind="market",
-        filled_quantity=1.5,
-        execution_time=datetime(2025, 10, 27, 14, 30, 0, tzinfo=timezone.utc),
+        quantity=1.5,
+        timestamp=datetime(2025, 10, 27, 14, 30, 0, tzinfo=timezone.utc),
     )
 
     async with notifier:
@@ -156,8 +156,8 @@ async def test_filled_quantity_strips_trailing_zeros(
         symbol=Symbol.create("BTC/USDT:USDT"),
         side=OrderSide.BUY,
         kind="market",
-        filled_quantity=quantity,
-        execution_time=datetime(2025, 10, 27, 12, 0, 0, tzinfo=timezone.utc),
+        quantity=quantity,
+        timestamp=datetime(2025, 10, 27, 12, 0, 0, tzinfo=timezone.utc),
     )
 
     async with notifier:
@@ -183,8 +183,8 @@ async def test_order_fill_reports_the_order_side(
         symbol=Symbol.create("BTC/USDT:USDT"),
         side=side,
         kind="market",
-        filled_quantity=0.5,
-        execution_time=datetime(2025, 10, 27, 12, 0, 0, tzinfo=timezone.utc),
+        quantity=0.5,
+        timestamp=datetime(2025, 10, 27, 12, 0, 0, tzinfo=timezone.utc),
     )
 
     async with notifier:
@@ -225,8 +225,8 @@ async def test_value_and_reason_are_rendered_when_present(
         symbol=Symbol.create("BTC/USDT:USDT"),
         side=OrderSide.BUY,
         kind="market",
-        filled_quantity=0.5,
-        execution_time=datetime(2025, 10, 27, 12, 0, 0, tzinfo=timezone.utc),
+        quantity=0.5,
+        timestamp=datetime(2025, 10, 27, 12, 0, 0, tzinfo=timezone.utc),
         filled_value=366.294,
         reason="entry rung 2 of 4",
     )
@@ -247,8 +247,8 @@ async def test_realised_profit_is_rendered_in_the_settlement_currency_on_a_close
         symbol=Symbol.create("BTC/USDT:USDT"),
         side=OrderSide.SELL,
         kind="take-profit",
-        filled_quantity=0.5,
-        execution_time=datetime(2025, 10, 27, 12, 0, 0, tzinfo=timezone.utc),
+        quantity=0.5,
+        timestamp=datetime(2025, 10, 27, 12, 0, 0, tzinfo=timezone.utc),
         realised_profit=-12.345,
         effect="close",
         source="take-profit",
@@ -272,8 +272,8 @@ async def test_realised_profit_is_left_out_unless_the_fill_took_position_off(
         symbol=Symbol.create("BTC/USDT:USDT"),
         side=OrderSide.BUY,
         kind="trigger",
-        filled_quantity=0.5,
-        execution_time=datetime(2025, 10, 27, 12, 0, 0, tzinfo=timezone.utc),
+        quantity=0.5,
+        timestamp=datetime(2025, 10, 27, 12, 0, 0, tzinfo=timezone.utc),
         realised_profit=0.0,
         effect=effect,
         source="strategy",
@@ -292,8 +292,8 @@ async def test_market_fill_embed_names_its_kind(notifier, mock_discord_client):
         symbol=Symbol.create("BTC/USDT:USDT"),
         side=OrderSide.BUY,
         kind="market",
-        filled_quantity=0.5,
-        execution_time=datetime(2025, 10, 27, 12, 0, 0, tzinfo=timezone.utc),
+        quantity=0.5,
+        timestamp=datetime(2025, 10, 27, 12, 0, 0, tzinfo=timezone.utc),
     )
 
     async with notifier:
@@ -311,8 +311,8 @@ async def test_reconciled_trigger_fill_embed_names_its_kind(
         symbol=Symbol.create("BTC/USDT:USDT"),
         side=OrderSide.BUY,
         kind="trigger",
-        filled_quantity=1.0,
-        execution_time=datetime(2025, 10, 27, 12, 0, 0, tzinfo=timezone.utc),
+        quantity=1.0,
+        timestamp=datetime(2025, 10, 27, 12, 0, 0, tzinfo=timezone.utc),
     )
 
     async with notifier:
@@ -406,8 +406,8 @@ async def test_attributed_fill_titles_what_happened_to_the_position(
         symbol=Symbol.create("BTC/USDT:USDT"),
         side=side,
         kind="market",
-        filled_quantity=0.5,
-        execution_time=datetime(2025, 10, 27, 12, 0, 0, tzinfo=timezone.utc),
+        quantity=0.5,
+        timestamp=datetime(2025, 10, 27, 12, 0, 0, tzinfo=timezone.utc),
         effect=effect,
         source=source,
     )
@@ -429,8 +429,8 @@ async def test_attributed_strategy_fill_keeps_naming_its_kind(
         symbol=Symbol.create("BTC/USDT:USDT"),
         side=OrderSide.BUY,
         kind="trigger",
-        filled_quantity=0.5,
-        execution_time=datetime(2025, 10, 27, 12, 0, 0, tzinfo=timezone.utc),
+        quantity=0.5,
+        timestamp=datetime(2025, 10, 27, 12, 0, 0, tzinfo=timezone.utc),
         effect="open",
         source="strategy",
     )
@@ -455,8 +455,8 @@ async def test_a_title_naming_what_fired_it_leaves_the_kind_out(
         symbol=Symbol.create("BTC/USDT:USDT"),
         side=OrderSide.SELL,
         kind="take-profit",
-        filled_quantity=0.5,
-        execution_time=datetime(2025, 10, 27, 12, 0, 0, tzinfo=timezone.utc),
+        quantity=0.5,
+        timestamp=datetime(2025, 10, 27, 12, 0, 0, tzinfo=timezone.utc),
         effect="close",
         source=source,
     )
@@ -484,8 +484,8 @@ async def test_a_reasoned_venue_fired_fill_is_the_strategys_own_event(
         symbol=Symbol.create("BTC/USDT:USDT"),
         side=side,
         kind="take-profit",
-        filled_quantity=0.5,
-        execution_time=datetime(2025, 10, 27, 12, 0, 0, tzinfo=timezone.utc),
+        quantity=0.5,
+        timestamp=datetime(2025, 10, 27, 12, 0, 0, tzinfo=timezone.utc),
         reason="exit at reference",
         effect=effect,
         source="take-profit",
@@ -510,8 +510,8 @@ async def test_a_reasoned_venue_fired_fill_stating_no_effect_renders_as_an_order
         symbol=Symbol.create("BTC/USDT:USDT"),
         side=OrderSide.SELL,
         kind="stop-loss",
-        filled_quantity=0.5,
-        execution_time=datetime(2025, 10, 27, 12, 0, 0, tzinfo=timezone.utc),
+        quantity=0.5,
+        timestamp=datetime(2025, 10, 27, 12, 0, 0, tzinfo=timezone.utc),
         reason="trend broke",
         source="stop-loss",
     )
@@ -532,8 +532,8 @@ async def test_a_reasoned_liquidation_keeps_its_title(notifier, mock_discord_cli
         symbol=Symbol.create("BTC/USDT:USDT"),
         side=OrderSide.SELL,
         kind="liquidation",
-        filled_quantity=0.5,
-        execution_time=datetime(2025, 10, 27, 12, 0, 0, tzinfo=timezone.utc),
+        quantity=0.5,
+        timestamp=datetime(2025, 10, 27, 12, 0, 0, tzinfo=timezone.utc),
         reason="margin call",
         effect="close",
         source="liquidation",
@@ -566,8 +566,8 @@ async def test_venue_fired_fill_stating_no_effect_renders_as_an_order(
         symbol=Symbol.create("BTC/USDT:USDT"),
         side=side,
         kind=kind,
-        filled_quantity=0.5,
-        execution_time=datetime(2025, 10, 27, 12, 0, 0, tzinfo=timezone.utc),
+        quantity=0.5,
+        timestamp=datetime(2025, 10, 27, 12, 0, 0, tzinfo=timezone.utc),
         source=kind,
     )
 
