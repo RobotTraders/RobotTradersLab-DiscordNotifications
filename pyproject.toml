@@ -1,12 +1,12 @@
 [project]
 name = "robottraderslab-discord-notifications"
-version = "0.1.1"
+version = "0.2.0"
 description = "Discord notifications plugin for the RobotTradersLab engine"
 readme = "README.md"
 requires-python = ">=3.13,<3.14"
 license = "Apache-2.0"
 dependencies = [
-  "robottraderslab>=0.1.0",
+  "robottraderslab>=0.3.0",
   "httpx>=0.28.1",
   "lazy-loader>=0.5",
 ]
@@ -15,6 +15,9 @@ dependencies = [
 Homepage = "https://robottraders.io/lab/discord-notifications"
 Documentation = "https://robottraders.io/lab/docs/discord-notifications.html"
 Repository = "https://github.com/RobotTraders/RobotTradersLab-DiscordNotifications"
+
+[project.entry-points."robot_traders_lab.secret_checks"]
+webhook_url = "robottraderslab_discord_notifications.webhook_check:check_webhook"
 
 [project.entry-points."robot_traders_lab.logging_handlers"]
 discord = "robottraderslab_discord_notifications:DiscordHandler"

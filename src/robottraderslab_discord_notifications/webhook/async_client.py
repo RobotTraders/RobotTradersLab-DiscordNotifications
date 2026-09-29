@@ -157,10 +157,10 @@ class AsyncDiscordClient:
             if response.status_code >= 500
             else "Discord API error"
         )
-        error_detail = f"{error_type} {response.status_code}: {error_msg}"
-        logger.error(error_detail)
         raise httpx.HTTPStatusError(
-            error_detail, request=response.request, response=response
+            f"{error_type} {response.status_code}: {error_msg}",
+            request=response.request,
+            response=response,
         )
 
     async def _wait_with_backoff(self, attempt: int, reason: str) -> None:
