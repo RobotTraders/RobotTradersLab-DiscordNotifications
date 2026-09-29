@@ -2,6 +2,7 @@ import importlib
 from collections.abc import Iterator
 
 import pytest
+
 from robottraderslab_discord_notifications.webhook import colours
 
 _VARIABLES = (

@@ -162,9 +162,9 @@ def _position_side(side: OrderSide, effect: FillEffect) -> str:
 
 
 def _fill_description(order_fill: OrderFill, header: _FillHeader) -> str:
-    execution_time = (
-        order_fill.execution_time.strftime("%Y-%m-%d %H:%M:%S UTC")
-        if order_fill.execution_time
+    timestamp = (
+        order_fill.timestamp.strftime("%Y-%m-%d %H:%M:%S UTC")
+        if order_fill.timestamp
         else "N/A"
     )
     description = f"**Side:** {header.side}\n"
@@ -172,8 +172,8 @@ def _fill_description(order_fill: OrderFill, header: _FillHeader) -> str:
         description += f"**Kind:** {header.kind}\n"
     description += (
         f"**Symbol:** {order_fill.symbol}\n"
-        f"**Execution Time:** {execution_time}\n"
-        f"**Filled Quantity:** {_trimmed(order_fill.filled_quantity)}"
+        f"**Execution Time:** {timestamp}\n"
+        f"**Filled Quantity:** {_trimmed(order_fill.quantity)}"
     )
     if order_fill.filled_value is not None:
         description += (
