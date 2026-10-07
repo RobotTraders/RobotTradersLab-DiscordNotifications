@@ -1,5 +1,5 @@
 import logging
-from typing import Any, NamedTuple, Self
+from typing import Any, Self
 
 from robottraderslab.exchanges import (
     FillEffect,
@@ -7,7 +7,7 @@ from robottraderslab.exchanges import (
     OrderFill,
     OrderPlacement,
     OrderSide,
-    OrderType,
+    tag_of,
 )
 from robottraderslab_discord_notifications.webhook import (
     BLUE,
@@ -15,40 +15,28 @@ from robottraderslab_discord_notifications.webhook import (
     DEFAULT_RETRY_BACKOFF_SECONDS,
     DEFAULT_TIMEOUT_SECONDS,
     GREEN,
-    ORANGE,
+    GREY,
     RED,
-    YELLOW,
     AsyncDiscordClient,
 )
 
 logger = logging.getLogger(__name__)
 
-_LIQUIDATION_TITLE = "Position Liquidated"
-_EFFECT_NAMES: dict[FillEffect, str] = {
-    "open": "Opened",
-    "increase": "Increased",
-    "reduce": "Reduced",
-    "close": "Closed",
+_TITLE_SEPARATOR = "·"
+_EFFECT_VERBS: dict[FillEffect, str] = {
+    "open": "opened",
+    "increase": "increased",
+    "reduce": "reduced",
+    "close": "closed",
 }
-_EXIT_SOURCES: dict[FillSource, tuple[str, int]] = {
-    "take-profit": ("Take Profit", BLUE),
-    "stop-loss": ("Stop Loss", YELLOW),
+_EXIT_SOURCES: dict[FillSource, str] = {
+    "take-profit": "Take Profit",
+    "stop-loss": "Stop Loss",
 }
 _SIDE_FOLLOWING_EFFECTS: frozenset[FillEffect] = frozenset({"open", "increase"})
 
 
-class _FillHeader(NamedTuple):
-    """The kind is None when the title or the strategy's reason names the event."""
-
-    title: str
-    side: str
-    kind: OrderType | None
-    colour: int
-
-
 class DiscordActionNotifier:
-    """Colour tells the events apart; the side is always named in the text."""
-
     def __init__(self, client: AsyncDiscordClient):
         self._client = client
 
@@ -90,11 +78,10 @@ class DiscordActionNotifier:
 
     async def notify_order(self, order_fill: OrderFill) -> None:
         """Send a Discord notification for a filled order."""
-        header = _fill_header(order_fill)
         embed = _embed(
-            title=header.title,
-            description=_fill_description(order_fill, header),
-            colour=header.colour,
+            title=_fill_title(order_fill),
+            description=_fill_description(order_fill),
+            colour=_fill_colour(order_fill),
         )
         await self._send(embed, order_fill.order_id)
 
@@ -115,69 +102,38 @@ class DiscordActionNotifier:
             logger.error(f"Failed to send Discord notification for {order_id}: {e}")
 
 
-def _fill_header(order_fill: OrderFill) -> _FillHeader:
-    if order_fill.effect is None:
-        return _FillHeader(
-            "Order Filled",
-            order_fill.side.name,
-            _reported_kind(order_fill),
-            _side_colour(order_fill),
-        )
-    return _attributed_header(order_fill, order_fill.effect)
-
-
-def _attributed_header(order_fill: OrderFill, effect: FillEffect) -> _FillHeader:
+def _fill_title(order_fill: OrderFill) -> str:
+    symbol = order_fill.symbol
+    effect = order_fill.effect
+    if effect is None:
+        return f"{order_fill.side.name} filled {_TITLE_SEPARATOR} {symbol}"
     side = _position_side(order_fill.side, effect)
     if order_fill.source == "liquidation":
-        return _FillHeader(_LIQUIDATION_TITLE, side, None, ORANGE)
+        return f"{side} liquidated {_TITLE_SEPARATOR} {symbol}"
+    title = f"{side} {_EFFECT_VERBS[effect]}"
     fired_by = _EXIT_SOURCES.get(order_fill.source) if order_fill.source else None
-    if fired_by is None or order_fill.reason is not None:
-        return _FillHeader(
-            f"Position {_EFFECT_NAMES[effect]}",
-            side,
-            _reported_kind(order_fill),
-            _side_colour(order_fill),
-        )
-    name, colour = fired_by
-    return _FillHeader(
-        f"Position {_EFFECT_NAMES[effect]} by {name}", side, None, colour
-    )
-
-
-def _reported_kind(order_fill: OrderFill) -> OrderType | None:
-    """The kind names the venue mechanism that produced the fill; a reason
-    names the trade the strategy made.
-    """
-    return None if order_fill.reason is not None else order_fill.kind
-
-
-def _side_colour(order_fill: OrderFill) -> int:
-    return GREEN if order_fill.side == OrderSide.BUY else RED
+    if fired_by is not None and order_fill.reason is None:
+        title += f" by {fired_by}"
+    return f"{title} {_TITLE_SEPARATOR} {symbol}"
 
 
 def _position_side(side: OrderSide, effect: FillEffect) -> str:
     """A fill taking a position off trades against the side that position was."""
     bought = side == OrderSide.BUY
-    return "LONG" if bought == (effect in _SIDE_FOLLOWING_EFFECTS) else "SHORT"
+    return "Long" if bought == (effect in _SIDE_FOLLOWING_EFFECTS) else "Short"
 
 
-def _fill_description(order_fill: OrderFill, header: _FillHeader) -> str:
-    timestamp = (
-        order_fill.timestamp.strftime("%Y-%m-%d %H:%M:%S UTC")
-        if order_fill.timestamp
-        else "N/A"
-    )
-    description = f"**Side:** {header.side}\n"
-    if header.kind is not None:
-        description += f"**Kind:** {header.kind}\n"
-    description += (
-        f"**Symbol:** {order_fill.symbol}\n"
-        f"**Execution Time:** {timestamp}\n"
-        f"**Filled Quantity:** {_trimmed(order_fill.quantity)}"
-    )
+def _fill_description(order_fill: OrderFill) -> str:
+    lines = []
+    if order_fill.reason is not None:
+        lines.append(f"**Reason:** {order_fill.reason}")
+    tag = tag_of(order_fill.client_order_id)
+    if tag is not None:
+        lines.append(f"**Tag:** {tag}")
+    lines.append(f"**Filled Quantity:** {_trimmed(order_fill.quantity)}")
     if order_fill.filled_value is not None:
-        description += (
-            f"\n**Filled Value:** {order_fill.filled_value:,.2f} "
+        lines.append(
+            f"**Filled Value:** {order_fill.filled_value:,.2f} "
             f"{order_fill.symbol.quote}"
         )
     if (
@@ -185,13 +141,30 @@ def _fill_description(order_fill: OrderFill, header: _FillHeader) -> str:
         and order_fill.effect is not None
         and order_fill.effect not in _SIDE_FOLLOWING_EFFECTS
     ):
-        description += (
-            f"\n**Realised Profit:** {order_fill.realised_profit:+,.2f} "
+        lines.append(
+            f"**Profit:** {order_fill.realised_profit:+,.2f} "
             f"{order_fill.symbol.settlement}"
         )
-    if order_fill.reason is not None:
-        description += f"\n**Reason:** {order_fill.reason}"
-    return description
+    timestamp = (
+        order_fill.timestamp.strftime("%Y-%m-%d %H:%M:%S UTC")
+        if order_fill.timestamp
+        else "N/A"
+    )
+    lines.append(f"**Execution Time:** {timestamp}")
+    return "\n".join(lines)
+
+
+def _fill_colour(order_fill: OrderFill) -> int:
+    effect = order_fill.effect
+    if effect is None:
+        return GREY
+    if effect in _SIDE_FOLLOWING_EFFECTS:
+        return BLUE
+    if order_fill.source == "liquidation":
+        return RED
+    if order_fill.realised_profit is None:
+        return GREY
+    return GREEN if order_fill.realised_profit >= 0 else RED
 
 
 def _placement_kind(placement: OrderPlacement) -> str:
