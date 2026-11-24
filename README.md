@@ -1,3 +1,6 @@
+> [!IMPORTANT]
+> This repository is archived. The Discord notifications plugin is now developed in the [`plugins/robottraderslab-discord-notifications`](https://github.com/RobotTraders/RobotTradersLab/tree/main/plugins/robottraderslab-discord-notifications) folder of [RobotTraders/RobotTradersLab](https://github.com/RobotTraders/RobotTradersLab), and released from there.
+
 # robottraderslab-discord-notifications
 
 Discord integration plugin for the RobotTradersLab engine, reporting order fills, order placements and the engine's log to Discord channels through webhooks, and registered under the name `discord`.
